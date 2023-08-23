@@ -2,7 +2,7 @@ import pickle
 import streamlit as st
 import pandas as pd
 from PIL import Image
-model_file = 'best_svm_model'
+model_file = 'model'
 
 with open(model_file, 'rb') as f_in:
     dv, model = pickle.load(f_in)
