@@ -21,7 +21,7 @@ def main():
     monthly_charges = st.sidebar.slider('Monthly Charges', 18, 120, 50)
     total_charges = st.sidebar.slider('Total Charges', 18, 8000, 2000)
 
-    gender = st.sidebar.selectbox('Gender', ['Male', 'Female'])
+    gender = st.sidebar.radio('Gender', ['Male', 'Female'])
     senior_citizen = st.sidebar.selectbox('Senior Citizen', [0, 1])
     partner = st.sidebar.selectbox('Partner', ['Yes', 'No'])
     dependents = st.sidebar.selectbox('Dependents', ['Yes', 'No'])
@@ -64,9 +64,16 @@ def main():
     # Convert the input dictionary to a DataFrame
     input_df = pd.DataFrame([input_data])
 
+    # Perform one-hot encoding for categorical features
+    categorical_columns = ['gender', 'MultipleLines', 'InternetService', 'OnlineSecurity',
+                           'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV',
+                           'StreamingMovies', 'Contract', 'PaperlessBilling', 'PaymentMethod']
+
+    encoded_input_df = pd.get_dummies(input_df, columns=categorical_columns, drop_first=True)
+
     # Make predictions
     if st.button('Predict'):
-        prediction = predict_churn(input_df)
+        prediction = predict_churn(encoded_input_df)
         st.write('Prediction:', prediction[0])
 
 if __name__ == '__main__':
