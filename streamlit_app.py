@@ -1,96 +1,73 @@
-import pickle
 import streamlit as st
+import pickle
 import pandas as pd
-from PIL import Image
 
-# Load the trained model from the pickle file
-model_file = 'model.pkl'
-with open(model_file, 'rb') as f_in:
-    model = pickle.load(f_in)
+# Load the saved SVM model
+with open('model.pkl', 'rb') as model_file:
+    model = pickle.load(model_file)
 
-# UI and Prediction Logic
+# Function to preprocess user inputs and make predictions
+def predict_churn(data):
+    prediction = model.predict(data)
+    return prediction
+
 def main():
-    image = Image.open('images/icone.png')
-    image2 = Image.open('images/image.png')
-    st.image(image, use_column_width=False)
-    
-    st.sidebar.info('This app is created to predict Customer Churn')
-    st.sidebar.image(image2)
-    
-    st.title("Predicting Customer Churn")
-    add_selectbox = st.sidebar.selectbox(
-        "How would you like to predict?",
-        ("Online", "Batch"))
-    
-    if add_selectbox == 'Online':
-        st.sidebar.title("Online Prediction")
-        
-        # UI components for user input
-        gender = st.selectbox('Gender:', ['male', 'female'])
-        seniorcitizen = st.selectbox('Customer is a senior citizen:', [0, 1])
-        partner = st.selectbox('Customer has a partner:', ['yes', 'no'])
-        dependents = st.selectbox('Customer has dependents:', ['yes', 'no'])
-        phoneservice = st.selectbox('Customer has phoneservice:', ['yes', 'no'])
-        multiplelines = st.selectbox('Customer has multiplelines:', ['yes', 'no', 'no_phone_service'])
-        internetservice = st.selectbox('Customer has internetservice:', ['dsl', 'no', 'fiber_optic'])
-        onlinesecurity = st.selectbox('Customer has onlinesecurity:', ['yes', 'no', 'no_internet_service'])
-        onlinebackup = st.selectbox('Customer has onlinebackup:', ['yes', 'no', 'no_internet_service'])
-        deviceprotection = st.selectbox('Customer has deviceprotection:', ['yes', 'no', 'no_internet_service'])
-        techsupport = st.selectbox('Customer has techsupport:', ['yes', 'no', 'no_internet_service'])
-        streamingtv = st.selectbox('Customer has streamingtv:', ['yes', 'no', 'no_internet_service'])
-        streamingmovies = st.selectbox('Customer has streamingmovies:', ['yes', 'no', 'no_internet_service'])
-        contract = st.selectbox('Customer has a contract:', ['month-to-month', 'one_year', 'two_year'])
-        paperlessbilling = st.selectbox('Customer has paperlessbilling:', ['yes', 'no'])
-        paymentmethod = st.selectbox('Payment Option:', ['bank_transfer_(automatic)', 'credit_card_(automatic)', 'electronic_check' ,'mailed_check'])
-        
-        tenure = st.number_input('Number of months the customer has been with the current telco provider:', min_value=0, max_value=240, value=0)
-        monthlycharges = st.number_input('Monthly charges:', min_value=0, max_value=240, value=0)
-        totalcharges = tenure * monthlycharges
+    st.title('Customer Churn Prediction App')
 
-        if st.button("Predict"):
-            input_dict = {
-                "gender": gender,
-                "seniorcitizen": seniorcitizen,
-                "partner": partner,
-                "dependents": dependents,
-                "phoneservice": phoneservice,
-                "multiplelines": multiplelines,
-                "internetservice": internetservice,
-                "onlinesecurity": onlinesecurity,
-                "onlinebackup": onlinebackup,
-                "deviceprotection": deviceprotection,
-                "techsupport": techsupport,
-                "streamingtv": streamingtv,
-                "streamingmovies": streamingmovies,
-                "contract": contract,
-                "paperlessbilling": paperlessbilling,
-                "paymentmethod": paymentmethod,
-                "tenure": tenure,
-                "monthlycharges": monthlycharges,
-                "totalcharges": totalcharges
-            }
+    st.sidebar.header('User Input Features')
 
-            # Preprocess input_dict if needed (aligning with training preprocessing)
-            # Make sure the input_dict keys match the features expected by your model
-            
-            X = pd.DataFrame.from_dict([input_dict])
-            y_pred = model.predict_proba(X)[0, 1]
-            churn = y_pred >= 0.5
-            output_prob = float(y_pred)
-            output = bool(churn)
-            st.success('Churn: {0}, Risk Score: {1}'.format(output, output_prob))
-    
-    elif add_selectbox == 'Batch':
-        st.sidebar.title("Batch Prediction")
-        file_upload = st.file_uploader("Upload csv file for predictions", type=["csv"])
-        if file_upload is not None:
-            data = pd.read_csv(file_upload)
-            # Preprocess 'data' DataFrame if needed (aligning with training preprocessing)
-            X = data  # Assuming the data is already preprocessed
-            y_preds = model.predict_proba(X)[:, 1]
-            churn_results = y_preds >= 0.5
-            st.write("Churn predictions:")
-            st.write(churn_results)
+    # Collect user input using Streamlit components
+    tenure = st.sidebar.slider('Tenure (months)', 0, 72, 1)
+    monthly_charges = st.sidebar.slider('Monthly Charges', 18, 120, 50)
+    total_charges = st.sidebar.slider('Total Charges', 18, 8000, 2000)
+
+    gender = st.sidebar.selectbox('Gender', ['Male', 'Female'])
+    senior_citizen = st.sidebar.selectbox('Senior Citizen', [0, 1])
+    partner = st.sidebar.selectbox('Partner', ['Yes', 'No'])
+    dependents = st.sidebar.selectbox('Dependents', ['Yes', 'No'])
+    phone_service = st.sidebar.selectbox('Phone Service', ['Yes', 'No'])
+    multiple_lines = st.sidebar.selectbox('Multiple Lines', ['Yes', 'No', 'No phone service'])
+    internet_service = st.sidebar.selectbox('Internet Service', ['DSL', 'Fiber optic', 'No'])
+    online_security = st.sidebar.selectbox('Online Security', ['Yes', 'No', 'No internet service'])
+    online_backup = st.sidebar.selectbox('Online Backup', ['Yes', 'No', 'No internet service'])
+    device_protection = st.sidebar.selectbox('Device Protection', ['Yes', 'No', 'No internet service'])
+    tech_support = st.sidebar.selectbox('Tech Support', ['Yes', 'No', 'No internet service'])
+    streaming_tv = st.sidebar.selectbox('Streaming TV', ['Yes', 'No', 'No internet service'])
+    streaming_movies = st.sidebar.selectbox('Streaming Movies', ['Yes', 'No', 'No internet service'])
+    contract = st.sidebar.selectbox('Contract', ['Month-to-month', 'One year', 'Two year'])
+    paperless_billing = st.sidebar.selectbox('Paperless Billing', ['Yes', 'No'])
+    payment_method = st.sidebar.selectbox('Payment Method', ['Electronic check', 'Mailed check', 'Credit card (automatic)', 'Bank transfer (automatic)'])
+
+    # Create a dictionary from the user inputs
+    input_data = {
+        'tenure': tenure,
+        'MonthlyCharges': monthly_charges,
+        'TotalCharges': total_charges,
+        'gender': gender,
+        'SeniorCitizen': senior_citizen,
+        'Partner': partner,
+        'Dependents': dependents,
+        'PhoneService': phone_service,
+        'MultipleLines': multiple_lines,
+        'InternetService': internet_service,
+        'OnlineSecurity': online_security,
+        'OnlineBackup': online_backup,
+        'DeviceProtection': device_protection,
+        'TechSupport': tech_support,
+        'StreamingTV': streaming_tv,
+        'StreamingMovies': streaming_movies,
+        'Contract': contract,
+        'PaperlessBilling': paperless_billing,
+        'PaymentMethod': payment_method
+    }
+
+    # Convert the input dictionary to a DataFrame
+    input_df = pd.DataFrame([input_data])
+
+    # Make predictions
+    if st.button('Predict'):
+        prediction = predict_churn(input_df)
+        st.write('Prediction:', prediction[0])
 
 if __name__ == '__main__':
     main()
