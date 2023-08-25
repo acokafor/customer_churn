@@ -1,11 +1,10 @@
-import pickle
 import streamlit as st
 import pandas as pd
+import pickle
 from PIL import Image
-model_file = 'model'
 
-with open(model_file, 'rb') as f_in:
-    dv, model = pickle.load(f_in)
+# Load the pickled model
+model = pickle.load(open('Customer Churn ML Project/model.pkl', 'rb'))
 
 
 def main():
@@ -73,12 +72,13 @@ def main():
 	if add_selectbox == 'Batch':
 		file_upload = st.file_uploader("Upload csv file for predictions", type=["csv"])
 		if file_upload is not None:
-			data = pd.read_csv(file_upload)
-			X = dv.transform([data])
-			y_pred = model.predict_proba(X)[0, 1]
-			churn = y_pred >= 0.5
-			churn = bool(churn)
-			st.write(churn)
+            data = pd.read_csv(file_upload)
+            X = data  # Use the raw data as input
+            y_pred = model.predict_proba(X)[:, 1]  # Remove [0, 1]
+            churn = y_pred >= 0.5
+            churn = churn.astype(bool)  # Convert to bool
+            data['Churn'] = churn
+            st.write(data)  # Display the churn predictions
 
 if __name__ == '__main__':
-	main()
+    main()
